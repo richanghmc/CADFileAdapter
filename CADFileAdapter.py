@@ -75,6 +75,7 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
     # take in the size of the stl file
     # create constants that represent the deck dimensions (128 mm x 86 mm)
     # try to generate a file that will create the adapter
+    # I can try to round off the edges with minkowski if necessary
     base = cube([128,86,15])
     inner = cube([xsize,ysize,zsize])
     width_diff = (128-xsize)/2
@@ -83,9 +84,7 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
         base,
         up(3)(right(width_diff)(forward(height_diff)(inner)))
     )
-    
     scad_render_to_file(d, 'CADAdapter.scad')
-    
     
     
     
