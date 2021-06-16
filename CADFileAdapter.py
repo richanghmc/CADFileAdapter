@@ -3,6 +3,8 @@ import math
 import stl
 from stl import mesh
 import numpy
+from solid import *
+from solid.utils import *
 
 import os
 import sys
@@ -26,7 +28,6 @@ import sys
 # Sample_labware.write("dimension.scad")
 
 # (Temperature_mod + Thermocycler_mod + Magnetic_mod + Sample_labware).write("dimension.scad")
-
 
 if len(sys.argv) < 2:
     sys.exit('Usage: %s [stl file]' % sys.argv[0])
@@ -66,7 +67,7 @@ xsize = maxx-minx
 ysize = maxy-miny
 zsize = maxz-minz
 
-def generateAdapter(xsize, ysize, zsize):
+def generateAdapter(xsize=128, ysize=86, zsize=15):
     """
     Take in the dimensions of the stl file generated from the 
     find_mins_max function and create an apporpriate sized adapter.
@@ -74,19 +75,32 @@ def generateAdapter(xsize, ysize, zsize):
     # take in the size of the stl file
     # create constants that represent the deck dimensions (128 mm x 86 mm)
     # try to generate a file that will create the adapter
+    base = cube([128,86,15])
+    inner = cube([xsize,ysize,zsize])
+    width_diff = (128-xsize)/2
+    height_diff = (86-ysize)/2
+    d = difference()(
+        base,
+        up(3)(right(width_diff)(forward(height_diff)(inner)))
+    )
+    
+    scad_render_to_file(d, 'CADAdapter.scad')
+    
+    
+    
+    
+# print ("X size:",xsize)
+# print ("Y size:", ysize)
+# print ("Z size:", zsize)
+# print ("X position:",minx)
+# print ("Y position:",miny)
+# print ("Z position:",minz)
 
 
-print ("File: Deck plate Adapter.stl", sys.argv[1])
 
-print ("X size:",xsize)
-print ("Y size:", ysize)
-print ("Z size:", zsize)
-print ("X position:",minx)
-print ("Y position:",miny)
-print ("Z position:",minz)
-print(minz,maxz)
-print("NE Quadrant: translate([",-minx, ",",-miny,",",-minz,"])")
-print("NW Quadrant: rotate([0,0,90]) translate([",-minx, ",",-miny,",",-minz,"])")
-print("SW Quadrant: rotate([0,0,180]) translate([",-minx, ",",-miny,",",-minz,"])")
-print("NE Quadrant: rotate([0,0,-90]) translate([",-minx, ",",-miny,",",-minz,"])")
-print("Center: translate([",-(minx + (xsize/2)), ",",-(miny + (ysize/2)),",",-(minz + (zsize/2)),"])")
+# print(minz,maxz)
+# print("NE Quadrant: translate([",-minx, ",",-miny,",",-minz,"])")
+# print("NW Quadrant: rotate([0,0,90]) translate([",-minx, ",",-miny,",",-minz,"])")
+# print("SW Quadrant: rotate([0,0,180]) translate([",-minx, ",",-miny,",",-minz,"])")
+# print("NE Quadrant: rotate([0,0,-90]) translate([",-minx, ",",-miny,",",-minz,"])")
+# print("Center: translate([",-(minx + (xsize/2)), ",",-(miny + (ysize/2)),",",-(minz + (zsize/2)),"])")
