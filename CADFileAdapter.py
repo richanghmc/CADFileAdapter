@@ -35,11 +35,7 @@ if len(sys.argv) < 2:
 if not os.path.exists(sys.argv[1]):
     sys.exit('ERROR: file %s was not found!' % sys.argv[1])
 
-# this stolen from numpy-stl documentation
-# https://pypi.python.org/pypi/numpy-stl
-
 # find the max dimensions, so we can know the bounding box, getting the height,
-# width, length (because these are the step size)...
 def find_mins_maxs(obj):
     minx = maxx = miny = maxy = minz = maxz = None
     for p in obj.points:
@@ -72,20 +68,30 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
     Take in the dimensions of the stl file generated from the 
     find_mins_max function and create an apporpriate sized adapter.
     """
-    # take in the size of the stl file
-    # create constants that represent the deck dimensions (128 mm x 86 mm)
-    # try to generate a file that will create the adapter
     # I can try to round off the edges with minkowski if necessary
     base = cube([128,86,15])
-    inner = cube([xsize,ysize,zsize])
-    width_diff = (128-xsize)/2
-    height_diff = (86-ysize)/2
-    d = difference()(
-        base,
-        up(3)(right(width_diff)(forward(height_diff)(inner)))
-    )
-    scad_render_to_file(d, 'CADAdapter.scad')
-    
+    if xsize*ysize <= 11008:
+        inner = cube([xsize,ysize,zsize])
+        width_padding = (128-xsize)/2
+        height_padding = (86-ysize)/2
+        adapter = difference()(
+            base,
+            up(3)(right(width_padding)(forward(height_padding)(inner)))
+        )
+    else:
+        upper_component = cube([xsize+10,ysize+10,20])
+        labware = cube([xsize,ysize,zsize])
+        width_padding = (xsize-118)/2
+        height_padding = (ysize-76)/2
+        adapter = union()(
+            right(width_padding)(forward(height_padding)(base)),
+            difference()(
+                color("red")(up(15)(upper_component)),
+                up(20)(right(5)(forward(5)(labware)))
+            )
+        )
+    scad_render_to_file(adapter, 'CADAdapter.scad')
+
     
     
 # print ("X size:",xsize)
