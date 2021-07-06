@@ -69,14 +69,18 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
     find_mins_max function and create an apporpriate sized adapter.
     """
     # I can try to round off the edges with minkowski if necessary
-    base = cube([128,86,15])
+    base = cube([126,84,14])
     if xsize*ysize <= 11008:
         inner = cube([xsize,ysize,zsize])
         width_padding = (128-xsize)/2
         height_padding = (86-ysize)/2
-        adapter = difference()(
+        noLipAdapter = difference()(
             base,
             up(3)(right(width_padding)(forward(height_padding)(inner)))
+        )
+        adapter = union()(
+            noLipAdapter,
+            color("red")(up(-1)(right(-1)(forward(-1)((cube([128,86,1]))))))
         )
     else:
         upper_component = cube([xsize+10,ysize+10,20])
@@ -84,14 +88,17 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
         width_padding = (xsize-118)/2
         height_padding = (ysize-76)/2
         adapter = union()(
-            right(width_padding)(forward(height_padding)(base)),
+            color("red")(up(-1)(right(width_padding)(forward(height_padding)((cube([128,86,1])))))),
+            right(width_padding+1)(forward(height_padding+1)(base)),
             difference()(
-                color("red")(up(15)(upper_component)),
+                color("red")(up(14)(upper_component)),
                 up(20)(right(5)(forward(5)(labware)))
-            )
+            ),
+            rotate([180,0,0])(cylinder(h=30, r1=60, r2=0, segments=4))
         )
     scad_render_to_file(adapter, 'CADAdapter.scad')
 
+# add in pyramid to have 45 degree slopes that connects base to upper component.
     
     
 # print ("X size:",xsize)
