@@ -63,6 +63,7 @@ xsize = maxx-minx
 ysize = maxy-miny
 zsize = maxz-minz
 
+
 def generateAdapter(xsize=128, ysize=86, zsize=15):
     """
     Take in the dimensions of the stl file generated from the 
@@ -83,21 +84,29 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
             color("red")(up(-1)(right(-1)(forward(-1)((cube([128,86,1]))))))
         )
     else:
-        upper_component = cube([xsize+10,ysize+10,20])
+        upper_component = cube([xsize+10,ysize+10,25])
         labware = cube([xsize,ysize,zsize])
         width_padding = (xsize-118)/2
         height_padding = (ysize-76)/2
-        adapter = union()(
-            color("red")(up(-1)(right(width_padding)(forward(height_padding)((cube([128,86,1])))))),
-            right(width_padding+1)(forward(height_padding+1)(base)),
-            difference()(
-                color("red")(up(14)(upper_component)),
-                up(20)(right(5)(forward(5)(labware)))
+        bottomTrap = 63
+        trapezoid = union()(
+            hull()(cube([bottomTrap,84,.0001]))(up(10)(cube([(xsize+12)/2,84,.0001]))),
+            rotate([0,0,180])(forward(-84)(hull()(cube([bottomTrap,84,.0001]))(up(10)(cube([(xsize+12)/2,84,.0001])))))
+        )
+        container = difference()(
+            color("red")(
+                upper_component   
             ),
-            rotate([180,0,0])(cylinder(h=30, r1=60, r2=0, segments=4))
+            up(10)(right(5)(forward(5)(labware)))
+        )
+        adapter = union()(
+            color("blue")(up(-1)(right(width_padding)(forward(height_padding)((cube([128,86,1])))))),
+            right(width_padding+1)(forward(height_padding+1)(base)),
+            up(24)(container),
+            up(14)(right((xsize+10)/2)(forward(height_padding+1)(trapezoid)))
         )
     scad_render_to_file(adapter, 'CADAdapter.scad')
-
+    
 # add in pyramid to have 45 degree slopes that connects base to upper component.
     
     
