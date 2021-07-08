@@ -69,7 +69,6 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
     Take in the dimensions of the stl file generated from the 
     find_mins_max function and create an apporpriate sized adapter.
     """
-    # I can try to round off the edges with minkowski if necessary
     base = cube([126,84,14])
     if xsize*ysize <= 11008:
         inner = cube([xsize,ysize,zsize])
@@ -88,7 +87,6 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
         labware = cube([xsize,ysize,zsize])
         width_padding = (xsize-118)/2
         height_padding = (ysize-76)/2
-        bottomTrap = 63
         trapezoid = union()(
             color("green")(
             polyhedron(points=([[0,0,0],[xsize+10,0,0],[xsize+10,ysize+10,0],[0,ysize+10,0],
@@ -106,11 +104,9 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
             color("blue")(up(-1)(right(width_padding)(forward(height_padding)((cube([128,86,1])))))),
             right(width_padding+1)(forward(height_padding+1)(base)),
             up(29)(container),
-            rotate([180,0,0])(up(-29)(forward(-108)((trapezoid))))
+            rotate([180,0,0])(up(-29)(forward(-ysize-10)((trapezoid))))
         )
     scad_render_to_file(adapter, 'CADAdapter.scad')
-    
-# add in pyramid to have 45 degree slopes that connects base to upper component.
     
     
 # print ("X size:",xsize)
