@@ -90,8 +90,11 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
         height_padding = (ysize-76)/2
         bottomTrap = 63
         trapezoid = union()(
-            hull()(cube([bottomTrap,84,.0001]))(up(10)(cube([(xsize+12)/2,84,.0001]))),
-            rotate([0,0,180])(forward(-84)(hull()(cube([bottomTrap,84,.0001]))(up(10)(cube([(xsize+12)/2,84,.0001])))))
+            color("green")(
+            polyhedron(points=([[0,0,0],[xsize+10,0,0],[xsize+10,ysize+10,0],[0,ysize+10,0],
+            [(xsize-116)/2,(ysize-74)/2,15],[126+(xsize-116)/2,(ysize-74)/2,15],[126+(xsize-116)/2,84+(ysize-74)/2,15],[(xsize-116)/2,84+(ysize-74)/2,15]]),
+            faces=([[0,1,2,3],[4,5,1,0],[5,6,2,1],[6,7,3,2],[7,4,0,3],[7,6,5,4]]))
+            )
         )
         container = difference()(
             color("red")(
@@ -102,8 +105,8 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
         adapter = union()(
             color("blue")(up(-1)(right(width_padding)(forward(height_padding)((cube([128,86,1])))))),
             right(width_padding+1)(forward(height_padding+1)(base)),
-            up(24)(container),
-            up(14)(right((xsize+10)/2)(forward(height_padding+1)(trapezoid)))
+            up(29)(container),
+            rotate([180,0,0])(up(-29)(forward(-108)((trapezoid))))
         )
     scad_render_to_file(adapter, 'CADAdapter.scad')
     
