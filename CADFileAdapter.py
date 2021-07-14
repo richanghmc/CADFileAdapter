@@ -69,28 +69,28 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
     Take in the dimensions of the stl file generated from the 
     find_mins_max function and create an apporpriate sized adapter.
     """
-    base = cube([126,84,14])
+    base = cube([126,84,12])
     if xsize*ysize <= 11008:
         inner = cube([xsize,ysize,zsize])
         width_padding = (128-xsize)/2
         height_padding = (86-ysize)/2
         noLipAdapter = difference()(
             base,
-            up(3)(right(width_padding)(forward(height_padding)(inner)))
+            up(4)(right(width_padding)(forward(height_padding)(inner)))
         )
         adapter = union()(
             noLipAdapter,
             color("red")(up(-1)(right(-1)(forward(-1)((cube([128,86,1]))))))
         )
     else:
-        upper_component = cube([xsize+10,ysize+10,25])
+        upper_component = cube([xsize+10,ysize+10,15])
         labware = cube([xsize,ysize,zsize])
         width_padding = (xsize-118)/2
         height_padding = (ysize-76)/2
         trapezoid = union()(
             color("green")(
             polyhedron(points=([[0,0,0],[xsize+10,0,0],[xsize+10,ysize+10,0],[0,ysize+10,0],
-            [(xsize-116)/2,(ysize-74)/2,15],[126+(xsize-116)/2,(ysize-74)/2,15],[126+(xsize-116)/2,84+(ysize-74)/2,15],[(xsize-116)/2,84+(ysize-74)/2,15]]),
+            [(xsize-116)/2,(ysize-74)/2,12],[126+(xsize-116)/2,(ysize-74)/2,12],[126+(xsize-116)/2,84+(ysize-74)/2,12],[(xsize-116)/2,84+(ysize-74)/2,12]]),
             faces=([[0,1,2,3],[4,5,1,0],[5,6,2,1],[6,7,3,2],[7,4,0,3],[7,6,5,4]]))
             )
         )
@@ -98,29 +98,16 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
             color("red")(
                 upper_component   
             ),
-            up(10)(right(5)(forward(5)(labware)))
+            up(5)(right(5)(forward(5)(labware)))
+        )
+        hollow_base = difference()(
+            base,
+            up(2)(forward(2)(right(2)(cube([122,80,8]))))
         )
         adapter = union()(
-            color("blue")(up(-1)(right(width_padding)(forward(height_padding)((cube([128,86,1])))))),
-            right(width_padding+1)(forward(height_padding+1)(base)),
-            up(29)(container),
-            rotate([180,0,0])(up(-29)(forward(-ysize-10)((trapezoid))))
+            color("blue")(up(-2.5)(right(width_padding)(forward(height_padding)((cube([128,86,2.5])))))),
+            right(width_padding+1)(forward(height_padding+1)(hollow_base)),
+            up(21)(container),
+            rotate([180,0,0])(up(-21)(forward(-ysize-10)((trapezoid))))
         )
     scad_render_to_file(adapter, 'CADAdapter.scad')
-    
-    
-# print ("X size:",xsize)
-# print ("Y size:", ysize)
-# print ("Z size:", zsize)
-# print ("X position:",minx)
-# print ("Y position:",miny)
-# print ("Z position:",minz)
-
-
-
-# print(minz,maxz)
-# print("NE Quadrant: translate([",-minx, ",",-miny,",",-minz,"])")
-# print("NW Quadrant: rotate([0,0,90]) translate([",-minx, ",",-miny,",",-minz,"])")
-# print("SW Quadrant: rotate([0,0,180]) translate([",-minx, ",",-miny,",",-minz,"])")
-# print("NE Quadrant: rotate([0,0,-90]) translate([",-minx, ",",-miny,",",-minz,"])")
-# print("Center: translate([",-(minx + (xsize/2)), ",",-(miny + (ysize/2)),",",-(minz + (zsize/2)),"])")
