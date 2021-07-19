@@ -35,7 +35,7 @@ if len(sys.argv) < 2:
 if not os.path.exists(sys.argv[1]):
     sys.exit('ERROR: file %s was not found!' % sys.argv[1])
 
-# find the max dimensions, so we can know the bounding box, getting the height,
+
 def find_mins_maxs(obj):
     minx = maxx = miny = maxy = minz = maxz = None
     for p in obj.points:
@@ -56,6 +56,7 @@ def find_mins_maxs(obj):
             minz = min(p[stl.Dimension.Z], minz)
     return minx, maxx, miny, maxy, minz, maxz
 
+
 main_body = mesh.Mesh.from_file(sys.argv[1])
 
 minx, maxx, miny, maxy, minz, maxz = find_mins_maxs(main_body)
@@ -64,50 +65,77 @@ ysize = maxy-miny
 zsize = maxz-minz
 
 
+def hollow(xsize, ysize, zsize):
+    xbase = 124
+    ybase = 82
+    zbase = 8
+    base = cube([xbase,ybase,zbase])
+    labware = cube([xsize, ysize, zsize])
+    width_padding = (xsize-118)/2
+    height_padding = (ysize-76)/2
+    trapHeight = 12
+    trapezoid = union()(
+        color("blue")(
+            polyhedron(points=([[0, 0, 0], [xsize+10, 0, 0], [xsize+10, ysize+10, 0], [0, ysize+10, 0],
+                                [width_padding, height_padding, trapHeight], [xbase+width_padding, height_padding, trapHeight], [xbase+width_padding, ybase+height_padding, trapHeight], [width_padding, ybase+height_padding, trapHeight]]),
+                       faces=([[0, 1, 2, 3], [4, 5, 1, 0], [5, 6, 2, 1], [6, 7, 3, 2], [7, 4, 0, 3], [7, 6, 5, 4]]))
+        )
+    )
+    adapterScaled = union()(
+        right(width_padding+1)(forward(height_padding)(base)),
+        rotate([180, 0, 0])(
+            up(-20)(forward(-ysize-6)((right(1)(trapezoid)))))
+    )
+    return adapterScaled
+
+
 def generateAdapter(xsize=128, ysize=86, zsize=15):
     """
     Take in the dimensions of the stl file generated from the 
     find_mins_max function and create an apporpriate sized adapter.
     """
-    base = cube([126,84,12])
+    xbase = 128
+    ybase = 86
+    zbase = 12
+    base = cube([xbase, ybase, zbase])
     if xsize*ysize <= 11008:
-        inner = cube([xsize,ysize,zsize])
-        width_padding = (128-xsize)/2
-        height_padding = (86-ysize)/2
-        noLipAdapter = difference()(
+        inner = cube([xsize, ysize, zsize])
+        width_padding = (xbase-xsize)/2
+        height_padding = (ybase-ysize)/2
+        adapter = difference()(
             base,
-            up(4)(right(width_padding)(forward(height_padding)(inner)))
+            up(8)(right(width_padding)(forward(height_padding)(inner)))
         )
-        adapter = union()(
-            noLipAdapter,
-            color("red")(up(-1)(right(-1)(forward(-1)((cube([128,86,1]))))))
-        )
+
     else:
-        upper_component = cube([xsize+10,ysize+10,15])
-        labware = cube([xsize,ysize,zsize])
+        upper_component = cube([xsize+10, ysize+10, 8])
+        labware = cube([xsize, ysize, zsize])
         width_padding = (xsize-118)/2
         height_padding = (ysize-76)/2
+        trapHeight = 12
         trapezoid = union()(
             color("green")(
-            polyhedron(points=([[0,0,0],[xsize+10,0,0],[xsize+10,ysize+10,0],[0,ysize+10,0],
-            [(xsize-116)/2,(ysize-74)/2,12],[126+(xsize-116)/2,(ysize-74)/2,12],[126+(xsize-116)/2,84+(ysize-74)/2,12],[(xsize-116)/2,84+(ysize-74)/2,12]]),
-            faces=([[0,1,2,3],[4,5,1,0],[5,6,2,1],[6,7,3,2],[7,4,0,3],[7,6,5,4]]))
+                polyhedron(points=([[0, 0, 0], [xsize+10, 0, 0], [xsize+10, ysize+10, 0], [0, ysize+10, 0],
+                                    [width_padding, height_padding, trapHeight], [xbase+width_padding, height_padding, trapHeight], [xbase+width_padding, ybase+height_padding, trapHeight], [width_padding, ybase+height_padding, trapHeight]]),
+                           faces=([[0, 1, 2, 3], [4, 5, 1, 0], [5, 6, 2, 1], [6, 7, 3, 2], [7, 4, 0, 3], [7, 6, 5, 4]]))
             )
         )
+        # any repeating numbers should variables.
         container = difference()(
             color("red")(
-                upper_component   
+                upper_component
             ),
             up(5)(right(5)(forward(5)(labware)))
         )
-        hollow_base = difference()(
-            base,
-            up(2)(forward(2)(right(2)(cube([122,80,8]))))
-        )
+        scaledAdapter = hollow(xsize-4, ysize-4, zsize-4)
         adapter = union()(
-            color("blue")(up(-2.5)(right(width_padding)(forward(height_padding)((cube([128,86,2.5])))))),
-            right(width_padding+1)(forward(height_padding+1)(hollow_base)),
-            up(21)(container),
-            rotate([180,0,0])(up(-21)(forward(-ysize-10)((trapezoid))))
+            right(width_padding+1)(forward(height_padding)(base)),
+            up(24)(right(1)((container))),
+            rotate([180, 0, 0])(
+                up(-24)(forward(-ysize-10)((right(1)(trapezoid)))))
         )
-    scad_render_to_file(adapter, 'CADAdapter.scad')
+        hollowed_adpater = difference()(
+            adapter,
+            forward(4)(right(4)(up(4)(scaledAdapter)))
+        )
+    scad_render_to_file(hollowed_adpater, 'CADAdapter.scad')
