@@ -70,7 +70,6 @@ def hollow(xsize, ysize, zsize):
     ybase = 82
     zbase = 8
     base = cube([xbase,ybase,zbase])
-    labware = cube([xsize, ysize, zsize])
     width_padding = (xsize-118)/2
     height_padding = (ysize-76)/2
     trapHeight = 12
@@ -89,7 +88,7 @@ def hollow(xsize, ysize, zsize):
     return adapterScaled
 
 
-def generateAdapter(xsize=128, ysize=86, zsize=15):
+def generateAdapter(xsize=128, ysize=86, zsize=12):
     """
     Take in the dimensions of the stl file generated from the 
     find_mins_max function and create an apporpriate sized adapter.
@@ -108,34 +107,40 @@ def generateAdapter(xsize=128, ysize=86, zsize=15):
         )
 
     else:
-        upper_component = cube([xsize+10, ysize+10, 8])
-        labware = cube([xsize, ysize, zsize])
-        width_padding = (xsize-118)/2
-        height_padding = (ysize-76)/2
-        trapHeight = 12
-        trapezoid = union()(
-            color("green")(
-                polyhedron(points=([[0, 0, 0], [xsize+10, 0, 0], [xsize+10, ysize+10, 0], [0, ysize+10, 0],
-                                    [width_padding, height_padding, trapHeight], [xbase+width_padding, height_padding, trapHeight], [xbase+width_padding, ybase+height_padding, trapHeight], [width_padding, ybase+height_padding, trapHeight]]),
-                           faces=([[0, 1, 2, 3], [4, 5, 1, 0], [5, 6, 2, 1], [6, 7, 3, 2], [7, 4, 0, 3], [7, 6, 5, 4]]))
-            )
+        dx = 10
+        adapter = difference()(
+            solidBase(xsize+dx,ysize+dx,12),
+            up(dx/2)(forward(dx/2)(right(dx/2)(solidBase(xsize,ysize,13,118,76,7))))   
         )
-        # any repeating numbers should variables.
-        container = difference()(
-            color("red")(
-                upper_component
-            ),
-            up(5)(right(5)(forward(5)(labware)))
+
+    scad_render_to_file(adapter, 'CADAdapter.scad')
+
+def solidBase(xsize,ysize,zsize,xbase=128,ybase=86,zbase=12):
+    base = cube([xbase, ybase, zbase])
+    dx = 10
+    upper_component = cube([xsize+dx, ysize+dx, zsize])
+    width_padding = (xsize-(xbase-10))/2
+    height_padding = (ysize-(ybase-10))/2
+    trapHeight = 12
+    trapezoid = trapezoidalPyramid(xsize,ysize,zsize,xbase,ybase)
+        # any repeating numbers should be variables.
+    adapter = union()(
+        right(width_padding+1)(forward(height_padding)(base)),
+        up(trapHeight+zbase)(right(1)((upper_component))),
+        rotate([180, 0, 0])(up(-(trapHeight+zbase))(forward(-ysize-10)((right(1)(trapezoid)))))
         )
-        scaledAdapter = hollow(xsize-4, ysize-4, zsize-4)
-        adapter = union()(
-            right(width_padding+1)(forward(height_padding)(base)),
-            up(24)(right(1)((container))),
-            rotate([180, 0, 0])(
-                up(-24)(forward(-ysize-10)((right(1)(trapezoid)))))
+    return adapter
+
+def trapezoidalPyramid(xsize,ysize,zsize,xbase=128,ybase=86):
+    width_padding = (xsize-(xbase-10))/2
+    height_padding = (ysize-(ybase-10))/2
+    trapHeight = 12
+    dx = 10
+    trapezoid = union()(
+        color("green")(
+            polyhedron(points=([[0, 0, 0], [xsize+dx, 0, 0], [xsize+dx, ysize+10, 0], [0, ysize+dx, 0],
+                                 [width_padding, height_padding, trapHeight], [xbase+width_padding, height_padding, trapHeight], [xbase+width_padding, ybase+height_padding, trapHeight], [width_padding, ybase+height_padding, trapHeight]]),
+                       faces=([[0, 1, 2, 3], [4, 5, 1, 0], [5, 6, 2, 1], [6, 7, 3, 2], [7, 4, 0, 3], [7, 6, 5, 4]]))
         )
-        hollowed_adpater = difference()(
-            adapter,
-            forward(4)(right(4)(up(4)(scaledAdapter)))
-        )
-    scad_render_to_file(hollowed_adpater, 'CADAdapter.scad')
+    )
+    return trapezoid
